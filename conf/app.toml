@@ -1,0 +1,9 @@
+[app]
+    http_port = 9090
+    key_store_dir = "./keystore"
+    # Mainnet
+    ether_net_url = "https://mainnet.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161"
+    bsc_net_url = "https://bsc-dataseed.binance.org"
+    admin_address = "0xbcaf727812a103a7350554b814afa940b9f8b87d"
+    contract_address = "0x358AA737e033F34df7c54306960a38d09AaBd523"
+    bsc_contract_address = "0xf9752a6e8a5e5f5e6eb3ab4e7d8492460fb319f0"
