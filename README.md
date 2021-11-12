@@ -1,18 +1,15 @@
-## 以太坊钱包
+## Ares Cross Chain Signer 
 
-这是web以太坊钱包，可以查询区块 网络信息
+ETH - > BSC ARES Bridge
 
-一、基本功能
----
-**新建账号**
-- keystore文件+密码
+### Build
+```bigquery
+go build main.go
+```
 
-**解锁账号**
-- keystore文件+密码
+### Start
+```bigquery
+./main
+```
 
-**交易**
-- 以太币转账
-
-**查询区块信息**
-
-**查询节点信息**
+This need input keystore password
