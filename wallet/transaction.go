@@ -13,15 +13,26 @@ import (
 )
 
 type LogTransfer struct {
-	From  common.Address `json:"from"`
-	To    common.Address `json:"to"`
-	Value *big.Int       `json:"value"`
+	From   common.Address `json:"from"`
+	To     common.Address `json:"to"`
+	Value  *big.Int       `json:"value"`
+	ValueS string         `json:"value_f"`
+	Height uint64         `json:"height"`
+	BscTx  common.Hash    `json:"bsc_tx"`
 }
 
-func SendBscTransaction(param map[string]string) (string, error) {
-	txHash := common.HexToHash(param["tx_hash"])
+func SendBscTransaction(txHash common.Hash) (string, error) {
 
 	tx, pending, err := mywallet.client.TransactionByHash(txHash)
+
+	swapAccount := LoadSwapJSON("tx_success")
+	if swapAccount == nil {
+		swapAccount = make(map[string]*LogTransfer)
+	}
+
+	if _, ok := swapAccount[txHash.String()]; ok {
+		return "", errors.New("cross bsc already exists")
+	}
 
 	if pending {
 		fmt.Println("Please waiting ", " txHash ", txHash.String())
@@ -60,6 +71,8 @@ func SendBscTransaction(param map[string]string) (string, error) {
 		}
 		transferEvent.From = common.HexToAddress(log.Topics[1].Hex())
 		transferEvent.To = common.HexToAddress(log.Topics[2].Hex())
+		transferEvent.ValueS = ToEth(transferEvent.Value).String()
+		transferEvent.Height = log.BlockNumber
 		fmt.Println("", transferEvent.From, " ", transferEvent.To, "  ", transferEvent.Value, " ", ToEth(transferEvent.Value))
 	}
 
@@ -68,41 +81,59 @@ func SendBscTransaction(param map[string]string) (string, error) {
 	}
 
 	input := mywallet.packInput("transfer", transferEvent.From, transferEvent.Value)
+	number, _ := mywallet.getAresBalance()
+	if number.Cmp(transferEvent.Value) < 0 {
+		return "", errors.New("account balance is low")
+	}
+
 	bscHash, err := mywallet.sendBscTransaction(mywallet.bscContractAddress, nil, input)
 	if err != nil {
 		return "", err
 	}
 
+	transferEvent.BscTx = common.HexToHash(bscHash)
+	txSwap := make(SwapAccount)
+
 	fmt.Println("Please waiting ", " bscHash ", bscHash)
 
 	count := 0
 	for {
-		time.Sleep(time.Millisecond * 200)
 		_, isPending, err := mywallet.bscClient.TransactionByHash(common.HexToHash(bscHash))
 		if err != nil {
+			fmt.Println("Please use TransactionByHash sub command query later.", err)
 			return "", err
 		}
 		count++
 		if !isPending {
 			break
 		}
+		time.Sleep(time.Millisecond * 200)
 		if count >= 40 {
 			fmt.Println("Please use querytx sub command query later.")
 			return "", errors.New("bsc tx error")
 		}
 	}
-	receipt, err = mywallet.bscClient.TransactionReceipt(common.HexToHash(bscHash))
-	if err != nil {
-		return "", err
-	}
 
-	if receipt.Status == types.ReceiptStatusSuccessful {
-		block, err := mywallet.client.BlockByHash(receipt.BlockHash)
+	count = 0
+	for {
+		receipt, err = mywallet.bscClient.TransactionReceipt(common.HexToHash(bscHash))
 		if err != nil {
-			return "", err
+			fmt.Println("Please use TransactionReceipt sub command query later.", err)
 		}
-
-		fmt.Println("Bsc transaction Success", " block Number", receipt.BlockNumber.Uint64(), " block txs", len(block.Transactions()), "blockhash", block.Hash().Hex())
+		count++
+		if err == nil {
+			if receipt.Status == types.ReceiptStatusSuccessful {
+				txSwap[txHash.String()] = &transferEvent
+				WriteSwapJSON("tx_success", txSwap)
+				break
+			}
+		}
+		fmt.Println("count ", count)
+		time.Sleep(time.Millisecond * 200)
+		if count >= 10 {
+			fmt.Println("Please use TransactionReceipt sub command query later.", err)
+			return "", errors.New("bsc tx error")
+		}
 	}
 
 	return bscHash, nil
@@ -206,8 +237,4 @@ func (w *Wallet) sendBscTransaction(toAccount common.Address, amount *big.Int, i
 	}
 
 	return signedTx.Hash().Hex(), nil
-}
-
-func GetGasPrice() (string, error) {
-	return mywallet.getGasPrice()
 }

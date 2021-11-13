@@ -69,3 +69,7 @@ func (c *Client) BlockByHash(txHash common.Hash) (*types.Block, error) {
 func (c *Client) TransactionByHash(txHash common.Hash) (tx *types.Transaction, isPending bool, err error) {
 	return c.conn.TransactionByHash(context.Background(), txHash)
 }
+
+func (c *Client) CallContract(msg ethereum.CallMsg) ([]byte, error) {
+	return c.conn.CallContract(context.Background(), msg, nil)
+}

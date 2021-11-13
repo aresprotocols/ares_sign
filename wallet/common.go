@@ -51,3 +51,9 @@ func ToEth(val *big.Int) *big.Float {
 	fbaseUnit := new(big.Float).SetFloat64(float64(baseUnit.Int64()))
 	return new(big.Float).Quo(new(big.Float).SetInt(val), fbaseUnit)
 }
+
+func EthToWei(val int64) *big.Int {
+	baseUnit := new(big.Int).Exp(big.NewInt(10), big.NewInt(18), nil)
+	value := new(big.Int).Mul(big.NewInt(int64(val)), baseUnit)
+	return value
+}

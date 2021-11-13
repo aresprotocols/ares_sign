@@ -3,10 +3,14 @@ package wallet
 import (
 	"ares/sign/config"
 	"crypto/ecdsa"
+	"encoding/hex"
 	"errors"
+	"fmt"
+	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"log"
+	"math/big"
 	"strings"
 )
 
@@ -55,6 +59,11 @@ func InitWallet() {
 		log.Fatal(err)
 	}
 	mywallet.contractAbi = contractAbi
+
+	_, err = mywallet.printBalance()
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 func NewWallet(keydir string) *Wallet {
@@ -63,31 +72,66 @@ func NewWallet(keydir string) *Wallet {
 	}
 }
 
-func (w *Wallet) getBalance() (string, error) {
-	if w.client == nil {
+func (w *Wallet) printBalance() (string, error) {
+	if w.bscClient == nil {
 		return "", errors.New("Please check network connection")
 	}
 
 	address := common.HexToAddress(w.account)
-	balance, err := w.client.BalanceAt(address, nil)
+	balance, err := w.bscClient.BalanceAt(address, nil)
 	if err != nil {
 		log.Println("Get balance err:", err)
 		return "", err
 	}
+	fmt.Println("printBalance", ToEth(balance))
 
-	return balance.String(), nil
-}
-
-func (w *Wallet) getGasPrice() (string, error) {
-	if w.client == nil {
-		return "", errors.New("Please check network connection")
-	}
-
-	gasPrice, err := w.client.SuggestGasPrice()
+	// Pack the input, call and unpack the results
+	input, err := w.contractAbi.Pack("balanceOf", address)
 	if err != nil {
-		log.Println("Get suggest gas price err:", err)
 		return "", err
 	}
 
-	return gasPrice.String(), nil
+	msg := ethereum.CallMsg{From: address, To: &w.bscContractAddress, Data: input}
+
+	output, err := w.bscClient.CallContract(msg)
+
+	fmt.Println("output", hex.EncodeToString(output))
+
+	var number *big.Int
+	err = w.contractAbi.UnpackIntoInterface(&number, "balanceOf", output)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	fmt.Println("printBalance erc20", ToEth(number))
+
+	return balance.String(), err
+}
+
+func (w *Wallet) getAresBalance() (*big.Int, error) {
+	if w.bscClient == nil {
+		return nil, errors.New("Please check network connection")
+	}
+
+	address := common.HexToAddress(w.account)
+
+	// Pack the input, call and unpack the results
+	input, err := w.contractAbi.Pack("balanceOf", address)
+	if err != nil {
+		return nil, err
+	}
+
+	msg := ethereum.CallMsg{From: address, To: &w.bscContractAddress, Data: input}
+
+	output, err := w.bscClient.CallContract(msg)
+
+	var number *big.Int
+	err = w.contractAbi.UnpackIntoInterface(&number, "balanceOf", output)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	fmt.Println("printBalance erc20", ToEth(number))
+
+	return number, err
 }
