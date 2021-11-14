@@ -82,6 +82,7 @@ func SendBscTransaction(txHash common.Hash) (string, error) {
 	}
 
 	input := mywallet.packInput("transfer", transferEvent.From, transferEvent.Value)
+	mywallet.update = true
 	number, _ := mywallet.getAresBalance()
 	if number.Cmp(transferEvent.Value) < 0 {
 		return "", errors.New("account balance is low")

@@ -131,7 +131,7 @@ func (w *Wallet) getAresBalance() (*big.Int, error) {
 		fmt.Println(err)
 	}
 
-	fmt.Println("printBalance erc20", ToEth(number))
+	fmt.Println("printBalance erc20", ToEth(number), " address ", address)
 	w.balance = number
 	w.update = false
 	return number, err
