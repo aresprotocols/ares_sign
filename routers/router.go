@@ -14,6 +14,7 @@ func InitRouters() *gin.Engine {
 	transaction := r.Group("/api/bridge")
 	{
 		transaction.POST("/crossBsc", api.SendCrossTransaction)
+		transaction.GET("/getBscBalance", api.GetBscBalance)
 		transaction.GET("/trxHash", api.GetTrxInfo)
 	}
 

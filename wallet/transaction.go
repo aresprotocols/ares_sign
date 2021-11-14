@@ -21,6 +21,10 @@ type LogTransfer struct {
 	BscTx  common.Hash    `json:"bsc_tx"`
 }
 
+func GetBscBalance() (*big.Int, error) {
+	return mywallet.getAresBalance()
+}
+
 func SendBscTransaction(txHash common.Hash) (string, error) {
 	mywallet.lock.Lock()
 	defer mywallet.lock.Unlock()
