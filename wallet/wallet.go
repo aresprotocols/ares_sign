@@ -3,7 +3,6 @@ package wallet
 import (
 	"ares/sign/config"
 	"crypto/ecdsa"
-	"encoding/hex"
 	"errors"
 	"fmt"
 	"github.com/ethereum/go-ethereum"
@@ -12,6 +11,7 @@ import (
 	"log"
 	"math/big"
 	"strings"
+	"sync"
 )
 
 type Wallet struct {
@@ -25,6 +25,10 @@ type Wallet struct {
 	contractAddress    common.Address
 	bscContractAddress common.Address
 	contractAbi        abi.ABI
+	balance            *big.Int
+	update             bool
+	swapAccount        map[string]*LogTransfer
+	lock               sync.RWMutex
 }
 
 var (
@@ -60,10 +64,16 @@ func InitWallet() {
 	}
 	mywallet.contractAbi = contractAbi
 
+	mywallet.update = true
 	_, err = mywallet.printBalance()
 	if err != nil {
 		log.Fatal(err)
 	}
+	swapAccount := LoadSwapJSON("tx_success")
+	if swapAccount == nil {
+		swapAccount = make(map[string]*LogTransfer)
+	}
+	mywallet.swapAccount = swapAccount
 }
 
 func NewWallet(keydir string) *Wallet {
@@ -85,25 +95,11 @@ func (w *Wallet) printBalance() (string, error) {
 	}
 	fmt.Println("printBalance", ToEth(balance))
 
-	// Pack the input, call and unpack the results
-	input, err := w.contractAbi.Pack("balanceOf", address)
+	_, err = w.getAresBalance()
 	if err != nil {
+		log.Println("Get erc20 balance err:", err)
 		return "", err
 	}
-
-	msg := ethereum.CallMsg{From: address, To: &w.bscContractAddress, Data: input}
-
-	output, err := w.bscClient.CallContract(msg)
-
-	fmt.Println("output", hex.EncodeToString(output))
-
-	var number *big.Int
-	err = w.contractAbi.UnpackIntoInterface(&number, "balanceOf", output)
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	fmt.Println("printBalance erc20", ToEth(number))
 
 	return balance.String(), err
 }
@@ -111,6 +107,10 @@ func (w *Wallet) printBalance() (string, error) {
 func (w *Wallet) getAresBalance() (*big.Int, error) {
 	if w.bscClient == nil {
 		return nil, errors.New("Please check network connection")
+	}
+
+	if !w.update {
+		return w.balance, nil
 	}
 
 	address := common.HexToAddress(w.account)
@@ -132,6 +132,7 @@ func (w *Wallet) getAresBalance() (*big.Int, error) {
 	}
 
 	fmt.Println("printBalance erc20", ToEth(number))
-
+	w.balance = number
+	w.update = false
 	return number, err
 }

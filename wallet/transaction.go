@@ -22,15 +22,12 @@ type LogTransfer struct {
 }
 
 func SendBscTransaction(txHash common.Hash) (string, error) {
+	mywallet.lock.Lock()
+	defer mywallet.lock.Unlock()
 
 	tx, pending, err := mywallet.client.TransactionByHash(txHash)
 
-	swapAccount := LoadSwapJSON("tx_success")
-	if swapAccount == nil {
-		swapAccount = make(map[string]*LogTransfer)
-	}
-
-	if _, ok := swapAccount[txHash.String()]; ok {
+	if _, ok := mywallet.swapAccount[txHash.String()]; ok {
 		return "", errors.New("cross bsc already exists")
 	}
 
@@ -125,6 +122,7 @@ func SendBscTransaction(txHash common.Hash) (string, error) {
 			if receipt.Status == types.ReceiptStatusSuccessful {
 				txSwap[txHash.String()] = &transferEvent
 				WriteSwapJSON("tx_success", txSwap)
+				mywallet.update = true
 				break
 			}
 		}
