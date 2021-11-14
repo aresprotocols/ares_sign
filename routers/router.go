@@ -10,6 +10,7 @@ import (
 func InitRouters() *gin.Engine {
 	r := gin.Default()
 	r.Use(middleware.Throttle(1000, 20))
+	r.Use(middleware.Cors())
 
 	transaction := r.Group("/api/bridge")
 	{
