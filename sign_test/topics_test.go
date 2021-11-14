@@ -72,6 +72,20 @@ func TestPostForm(t *testing.T) {
 	//}
 }
 
+// {"code":0,"data":{"balance":"82112000000000000000000"},"msg":"Get bsc balance success"}
+func TestGet(t *testing.T) {
+	urlStr := "http://127.0.0.1:9090/api/bridge/getBscBalance"
+	resp, err := http.Get(urlStr)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	fmt.Println(string(body))
+	fmt.Println(resp.StatusCode)
+}
+
 func TestExecErc20(t *testing.T) {
 
 	client, err := ethclient.Dial("wss://mainnet.infura.io/ws/v3/f0001dbfb6c943a09468471b59a01510")
