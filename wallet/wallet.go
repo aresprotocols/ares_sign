@@ -8,8 +8,10 @@ import (
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
+	"gopkg.in/gomail.v2"
 	"log"
 	"math/big"
+	"strconv"
 	"strings"
 	"sync"
 )
@@ -132,7 +134,41 @@ func (w *Wallet) getAresBalance() (*big.Int, error) {
 	}
 
 	fmt.Println("printBalance erc20", ToEth(number), " address ", address)
+	w.sendDepositEmail(number)
 	w.balance = number
 	w.update = false
 	return number, err
+}
+
+func (w *Wallet) sendDepositEmail(value *big.Int) {
+	number, _ := ToEth(value).Uint64()
+	if number <= 500000 {
+
+		m := gomail.NewMessage()
+
+		//Sender
+		m.SetHeader("From", "1032087738@qq.com")
+		//Receiver
+		m.SetHeader("To", "450595468@qq.com")
+		//CC
+		//m.SetAddressHeader("Cc", "xxx@qq.com", "xiaozhujiao")
+		//Subject
+		m.SetHeader("Subject", "账户余额不足")
+		//Content
+		s1 := "<h1>" + w.account + "</h1><p></p>"
+		s2 := "<h1>" + strconv.FormatUint(number, 10) + "</h1>"
+		m.SetBody("text/html", s1+s2)
+		//attach
+		//m.Attach("./myIpPic.png")
+
+		//拿到token，并进行连接,第4个参数是填授权码
+		d := gomail.NewDialer("smtp.qq.com", 587, "1032087738@qq.com", "fvsofxkcmnaqbaja")
+
+		// 发送邮件
+		if err := d.DialAndSend(m); err != nil {
+			fmt.Printf("DialAndSend err %v:", err)
+		}
+		fmt.Printf("send mail success\n")
+	}
+
 }

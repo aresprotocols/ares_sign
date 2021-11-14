@@ -13,6 +13,7 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
+	"gopkg.in/gomail.v2"
 	"io/ioutil"
 	"math/big"
 	"net/http"
@@ -74,7 +75,8 @@ func TestPostForm(t *testing.T) {
 
 // {"code":0,"data":{"balance":"82112000000000000000000"},"msg":"Get bsc balance success"}
 func TestGet(t *testing.T) {
-	urlStr := "http://167.179.113.219:9090/api/bridge/getBscBalance"
+	urlStr := "http://127.0.0.1:9090/api/bridge/getBscBalance"
+	//urlStr := "http://167.179.113.219:9090/api/bridge/getBscBalance"
 	resp, err := http.Get(urlStr)
 	if err != nil {
 		fmt.Println(err)
@@ -162,7 +164,7 @@ func TestExecErc20(t *testing.T) {
 			fmt.Printf("To: %s\n", transferEvent.To.Hex())
 			fmt.Printf("Tokens: %s\n", wallet.ToEth(transferEvent.Value).String())
 
-			urlStr := "http://127.0.0.1:9090/api/bridge/crossBsc"
+			urlStr := "http://167.179.113.219:9090/api/bridge/crossBsc"
 			data := make(url.Values)
 			data["tx_hash"] = []string{vLog.TxHash.String()}
 			resp, err := http.PostForm(urlStr, data)
@@ -300,4 +302,33 @@ func TestUnPack(t *testing.T) {
 	}
 
 	fmt.Println("printBalance erc20", wallet.ToEth(number))
+}
+
+func TestSendEmail(t *testing.T) {
+	m := gomail.NewMessage()
+
+	//发送人
+	m.SetHeader("From", "1032087738@qq.com")
+	//接收人
+	m.SetHeader("To", "450595468@qq.com")
+	//抄送人
+	//m.SetAddressHeader("Cc", "xxx@qq.com", "xiaozhujiao")
+	//主题
+	m.SetHeader("Subject", "账户余额不足")
+	//内容
+	s1 := "<h1>0xa2990ec3024fd0c8afec70f40a1b51beb9853e641b1b153615a9b01c0d1bc8ae</h1>"
+	s2 := "<h1>500000</h1>"
+	m.SetBody("text/html", s1+s2)
+	//附件
+	//m.Attach("./myIpPic.png")
+
+	//拿到token，并进行连接,第4个参数是填授权码
+	d := gomail.NewDialer("smtp.qq.com", 587, "1032087738@qq.com", "fvsofxkcmnaqbaja")
+
+	// 发送邮件
+	if err := d.DialAndSend(m); err != nil {
+		fmt.Printf("DialAndSend err %v:", err)
+		panic(err)
+	}
+	fmt.Printf("send mail success\n")
 }
