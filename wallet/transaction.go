@@ -127,6 +127,7 @@ func SendBscTransaction(txHash common.Hash) (string, error) {
 			if receipt.Status == types.ReceiptStatusSuccessful {
 				txSwap[txHash.String()] = &transferEvent
 				WriteSwapJSON("tx_success", txSwap)
+				mywallet.swapAccount[txHash.String()] = &transferEvent
 				mywallet.update = true
 				break
 			}
