@@ -53,9 +53,9 @@ func TestPost(t *testing.T) {
 }
 
 func TestPostForm(t *testing.T) {
-	urlStr := "http://127.0.0.1:9090/api/bridge/crossBsc"
+	urlStr := "http://167.179.113.219:9090/api/bridge/crossBsc"
 	data := make(url.Values)
-	data["tx_hash"] = []string{"0x6aad612f2837adf639fd454125d29e2a724cdec69aa36d0f6be74fada3444ade"}
+	data["tx_hash"] = []string{"0x66262daf297d94d55ac35c83c40dcbc545cbffd8f0ebd4b5fea6dc4eaae78871"}
 	resp, err := http.PostForm(urlStr, data)
 
 	if err != nil {
