@@ -149,7 +149,7 @@ func TestExecErc20(t *testing.T) {
 			}
 
 			var transferEvent wallet.LogTransfer
-			fmt.Println("log ", hex.EncodeToString(vLog.Data))
+			fmt.Println("tx ", vLog.TxHash.String())
 			err = contractAbi.UnpackIntoInterface(&transferEvent, "Transfer", vLog.Data)
 			if err != nil {
 				fmt.Println(err)

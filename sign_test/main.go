@@ -3,12 +3,12 @@ package main
 import (
 	"ares/sign/wallet"
 	"context"
-	hex "encoding/hex"
 	"encoding/json"
 	"fmt"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"io/ioutil"
@@ -16,6 +16,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 )
 
 const ERC20ABI = "[{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"spender\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"Approval\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"from\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"Transfer\",\"type\":\"event\"},{\"constant\":true,\"inputs\":[{\"internalType\":\"address\",\"name\":\"_owner\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"spender\",\"type\":\"address\"}],\"name\":\"allowance\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"internalType\":\"address\",\"name\":\"spender\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"approve\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"balanceOf\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"decimals\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"getOwner\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"name\",\"outputs\":[{\"internalType\":\"string\",\"name\":\"\",\"type\":\"string\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"symbol\",\"outputs\":[{\"internalType\":\"string\",\"name\":\"\",\"type\":\"string\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"totalSupply\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"internalType\":\"address\",\"name\":\"recipient\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"transfer\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"recipient\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"transferFrom\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]"
@@ -53,11 +54,6 @@ func main() {
 		Topics: topics,
 	}
 
-	logs, err := client.FilterLogs(context.Background(), query)
-	if err != nil {
-		fmt.Println(err)
-	}
-
 	contractAbi, err := abi.JSON(strings.NewReader(string(ERC20ABI)))
 	if err != nil {
 		fmt.Println(err)
@@ -68,20 +64,35 @@ func main() {
 		swapAccount = make(map[string]*wallet.LogTransfer)
 	}
 
+	for {
+		logs, err := client.FilterLogs(context.Background(), query)
+		if err != nil {
+			fmt.Println(err)
+		}
+		fmt.Println("FilterLogs", len(logs))
+		LoopQueryCross(logs, contractAbi, logTransferSigHash, swapAccount)
+		wallet.WriteSwapJSON("swap", swapAccount)
+
+		time.Sleep(time.Minute * 10)
+	}
+}
+
+func LoopQueryCross(logs []types.Log, contractAbi abi.ABI, signHash common.Hash, swapAccount wallet.SwapAccount) {
 	for _, vLog := range logs {
-		fmt.Printf("Log Block Number: %d\n", vLog.BlockNumber)
-		fmt.Printf("Log Index: %d\n", vLog.Index)
 
 		switch vLog.Topics[0].Hex() {
-		case logTransferSigHash.Hex():
+		case signHash.Hex():
 
 			if _, ok := swapAccount[vLog.TxHash.String()]; ok {
 				continue
 			}
 
+			fmt.Printf("Log Block Number: %d\n", vLog.BlockNumber)
+			fmt.Printf("Log Index: %d\n", vLog.Index)
+
 			var transferEvent wallet.LogTransfer
-			fmt.Println("log ", hex.EncodeToString(vLog.Data))
-			err = contractAbi.UnpackIntoInterface(&transferEvent, "Transfer", vLog.Data)
+			fmt.Println("tx ", vLog.TxHash.String())
+			err := contractAbi.UnpackIntoInterface(&transferEvent, "Transfer", vLog.Data)
 			if err != nil {
 				fmt.Println(err)
 			}
@@ -95,7 +106,7 @@ func main() {
 			fmt.Printf("To: %s\n", transferEvent.To.Hex())
 			fmt.Printf("Tokens: %s\n", wallet.ToEth(transferEvent.Value).String())
 
-			urlStr := "http://127.0.0.1:9090/api/bridge/crossBsc"
+			urlStr := "http://167.179.113.219:9090/api/bridge/crossBsc"
 			data := make(url.Values)
 			data["tx_hash"] = []string{vLog.TxHash.String()}
 			resp, err := http.PostForm(urlStr, data)
@@ -120,7 +131,6 @@ func main() {
 			}
 		}
 	}
-	wallet.WriteSwapJSON("swap", swapAccount)
 }
 
 type Resp struct {
