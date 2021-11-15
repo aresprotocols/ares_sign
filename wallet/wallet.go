@@ -134,13 +134,13 @@ func (w *Wallet) getAresBalance() (*big.Int, error) {
 	}
 
 	fmt.Println("printBalance erc20", ToEth(number), " address ", address)
-	w.sendDepositEmail(number)
+	w.sendDepositEmail(number, "getAresBalance")
 	w.balance = number
 	w.update = false
 	return number, err
 }
 
-func (w *Wallet) sendDepositEmail(value *big.Int) {
+func (w *Wallet) sendDepositEmail(value *big.Int, tx string) {
 	number, _ := ToEth(value).Uint64()
 	if number <= 500000 {
 
@@ -157,7 +157,8 @@ func (w *Wallet) sendDepositEmail(value *big.Int) {
 		//Content
 		s1 := "<h1>" + w.account + "</h1><p></p>"
 		s2 := "<h1>" + strconv.FormatUint(number, 10) + "</h1>"
-		m.SetBody("text/html", s1+s2)
+		s3 := "<h1>" + tx + "</h1>"
+		m.SetBody("text/html", s1+s2+s3)
 		//attach
 		//m.Attach("./myIpPic.png")
 

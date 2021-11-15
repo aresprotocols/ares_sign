@@ -93,6 +93,7 @@ func SendBscTransaction(txHash common.Hash) (string, error) {
 	mywallet.update = true
 	number, _ := mywallet.getAresBalance()
 	if number.Cmp(transferEvent.Value) < 0 {
+		mywallet.sendDepositEmail(number, txHash.String())
 		return "", errors.New("account balance is low")
 	}
 
