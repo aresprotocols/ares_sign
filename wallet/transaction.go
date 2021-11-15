@@ -35,6 +35,14 @@ func SendBscTransaction(txHash common.Hash) (string, error) {
 		return "", errors.New("cross bsc already exists")
 	}
 
+	swapAccount := LoadSwapJSON("tx_success")
+	if swapAccount == nil {
+		swapAccount = make(map[string]*LogTransfer)
+	}
+	if _, ok := swapAccount[txHash.String()]; ok {
+		return "", errors.New("cross bsc local already exists")
+	}
+
 	if pending {
 		fmt.Println("Please waiting ", " txHash ", txHash.String())
 	}
