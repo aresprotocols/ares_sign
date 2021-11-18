@@ -40,7 +40,7 @@ func SendBscTransaction(txHash common.Hash) (string, error) {
 		swapAccount = make(map[string]*LogTransfer)
 	}
 	if _, ok := swapAccount[txHash.String()]; ok {
-		return "", errors.New("cross bsc local already exists")
+		return "", fmt.Errorf("cross bsc local already exists: %v", txHash)
 	}
 
 	if pending {

@@ -332,3 +332,21 @@ func TestSendEmail(t *testing.T) {
 	}
 	fmt.Printf("send mail success\n")
 }
+
+func TestUnpack(t *testing.T) {
+	str := "a9059cbb000000000000000000000000bcaf727812a103a7350554b814afa940b9f8b87d00000000000000000000000000000000000000000000d3c21bcecceda1000000"
+
+	contractAbi, err := abi.JSON(strings.NewReader(string(ERC20ABI)))
+	data, _ := hex.DecodeString(str)
+
+	transfer := struct {
+		From  common.Address
+		Value *big.Int
+	}{}
+	err = contractAbi.UnpackIntoInterface(&transfer, "transfer", data)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	fmt.Println("printBalance erc20", wallet.ToEth(transfer.Value), " ", transfer.From)
+}
