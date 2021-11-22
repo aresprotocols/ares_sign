@@ -30,6 +30,7 @@ func SendBscTransaction(txHash common.Hash) (string, error) {
 	defer mywallet.lock.Unlock()
 
 	tx, pending, err := mywallet.client.TransactionByHash(txHash)
+	mywallet.l.Info("RegisterDapp", "type", "request", "txHash", txHash.String())
 
 	if _, ok := mywallet.swapAccount[txHash.String()]; ok {
 		return "", errors.New("cross bsc already exists")

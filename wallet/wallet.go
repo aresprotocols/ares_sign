@@ -2,6 +2,7 @@ package wallet
 
 import (
 	"ares/sign/config"
+	"ares/sign/log"
 	"crypto/ecdsa"
 	"errors"
 	"fmt"
@@ -9,7 +10,6 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"gopkg.in/gomail.v2"
-	"log"
 	"math/big"
 	"strconv"
 	"strings"
@@ -31,6 +31,7 @@ type Wallet struct {
 	update             bool
 	swapAccount        map[string]*LogTransfer
 	lock               sync.RWMutex
+	l                  log.Logger
 }
 
 var (
@@ -62,20 +63,27 @@ func InitWallet() {
 
 	contractAbi, err := abi.JSON(strings.NewReader(string(ERC20ABI)))
 	if err != nil {
-		log.Fatal(err)
+		log.Error("InitWallet", " abi.JSON ", err)
 	}
 	mywallet.contractAbi = contractAbi
 
 	mywallet.update = true
 	_, err = mywallet.printBalance()
 	if err != nil {
-		log.Fatal(err)
+		log.Error("InitWallet", " printBalance ", err)
 	}
 	swapAccount := LoadSwapJSON("tx_success")
 	if swapAccount == nil {
 		swapAccount = make(map[string]*LogTransfer)
 	}
 	mywallet.swapAccount = swapAccount
+
+	mywallet.l = log.New("api", "signer")
+	handler, err := log.FileHandler("sign", log.LogfmtFormat())
+	if err != nil {
+		log.Error("InitWallet", " FileHandler ", err)
+	}
+	mywallet.l.SetHandler(handler)
 }
 
 func NewWallet(keydir string) *Wallet {
@@ -92,14 +100,14 @@ func (w *Wallet) printBalance() (string, error) {
 	address := common.HexToAddress(w.account)
 	balance, err := w.bscClient.BalanceAt(address, nil)
 	if err != nil {
-		log.Println("Get balance err:", err)
+		log.Info("printBalance", "Get balance err:", err)
 		return "", err
 	}
 	fmt.Println("printBalance", ToEth(balance))
 
 	_, err = w.getAresBalance()
 	if err != nil {
-		log.Println("Get erc20 balance err:", err)
+		log.Info("printBalance", "Get erc20 balance err:", err)
 		return "", err
 	}
 
