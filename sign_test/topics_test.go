@@ -137,7 +137,7 @@ func TestExecErc20(t *testing.T) {
 		swapAccount = make(map[string]*wallet.LogTransfer)
 	}
 
-	for _, vLog := range logs {
+	for i, vLog := range logs {
 		fmt.Printf("Log Block Number: %d\n", vLog.BlockNumber)
 		fmt.Printf("Log Index: %d\n", vLog.Index)
 
@@ -149,7 +149,7 @@ func TestExecErc20(t *testing.T) {
 			}
 
 			var transferEvent wallet.LogTransfer
-			fmt.Println("tx ", vLog.TxHash.String())
+			fmt.Println("tx ", vLog.TxHash.String(), " index ", i)
 			err = contractAbi.UnpackIntoInterface(&transferEvent, "Transfer", vLog.Data)
 			if err != nil {
 				fmt.Println(err)

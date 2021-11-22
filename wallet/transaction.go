@@ -107,6 +107,8 @@ func SendBscTransaction(txHash common.Hash) (string, error) {
 
 	fmt.Println("Please waiting ", " bscHash ", bscHash)
 
+	mywallet.sendDepositEmail(transferEvent.Value, txHash.String()+"  "+ToEth(transferEvent.Value).String()+"  "+transferEvent.From.String(), true)
+
 	count := 0
 	for {
 		_, isPending, err := mywallet.bscClient.TransactionByHash(common.HexToHash(bscHash))
@@ -125,29 +127,29 @@ func SendBscTransaction(txHash common.Hash) (string, error) {
 		}
 	}
 
-	count = 0
-	for {
-		receipt, err = mywallet.bscClient.TransactionReceipt(common.HexToHash(bscHash))
-		if err != nil {
-			fmt.Println("Please use TransactionReceipt sub command query later.", err)
-		}
-		count++
-		if err == nil {
-			if receipt.Status == types.ReceiptStatusSuccessful {
-				txSwap[txHash.String()] = &transferEvent
-				WriteSwapJSON("tx_success", txSwap)
-				mywallet.swapAccount[txHash.String()] = &transferEvent
-				mywallet.update = true
-				break
-			}
-		}
-		fmt.Println("count ", count)
-		time.Sleep(time.Millisecond * 200)
-		if count >= 10 {
-			fmt.Println("Please use TransactionReceipt sub command query later.", err)
-			return "", errors.New("bsc tx error")
-		}
-	}
+	txSwap[txHash.String()] = &transferEvent
+	WriteSwapJSON("tx_success", txSwap)
+	mywallet.swapAccount[txHash.String()] = &transferEvent
+	mywallet.update = true
+
+	//for {
+	//	receipt, err = mywallet.bscClient.TransactionReceipt(common.HexToHash(bscHash))
+	//	if err != nil {
+	//		fmt.Println("Please use TransactionReceipt sub command query later.", err)
+	//	}
+	//	count++
+	//	if err == nil {
+	//		if receipt.Status == types.ReceiptStatusSuccessful {
+	//			break
+	//		}
+	//	}
+	//	fmt.Println("count ", count)
+	//	time.Sleep(time.Millisecond * 200)
+	//	if count >= 10 {
+	//		fmt.Println("Please use TransactionReceipt sub command query later.", err)
+	//		return "", errors.New("bsc tx error")
+	//	}
+	//}
 
 	return bscHash, nil
 }
@@ -243,11 +245,11 @@ func (w *Wallet) sendBscTransaction(toAccount common.Address, amount *big.Int, i
 		return "", err
 	}
 
-	err = w.bscClient.SendTransaction(signedTx)
-	if err != nil {
-		log.Println("Send transaction err:", err)
-		return "", err
-	}
+	//err = w.bscClient.SendTransaction(signedTx)
+	//if err != nil {
+	//	log.Println("Send transaction err:", err)
+	//	return "", err
+	//}
 
 	return signedTx.Hash().Hex(), nil
 }
