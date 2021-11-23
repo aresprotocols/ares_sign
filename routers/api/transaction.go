@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/gin-gonic/gin"
+	"math/big"
 )
 
 func SendCrossTransaction(c *gin.Context) {
@@ -12,8 +13,7 @@ func SendCrossTransaction(c *gin.Context) {
 	err := c.ShouldBind(&param)
 
 	txHash := common.HexToHash(param["tx_hash"])
-
-	transHash, err := wallet.SendBscTransaction(txHash)
+	transHash, err := wallet.SendBscTransaction(txHash, c)
 	if err != nil {
 		txError := make(wallet.KeyAccount)
 		txError[txHash.String()] = uint64(len(wallet.LoadNodesJSON("tx_error")))
@@ -42,7 +42,15 @@ func GetBscBalance(c *gin.Context) {
 		data["error"] = err.Error()
 		SuccessResponse(c, 0, "Get bsc balance error", data)
 	} else {
-		data["balance"] = response.String()
+		value := new(big.Int).Add(wallet.EthToWei(200), response)
+		data["balance"] = value.String()
 		SuccessResponse(c, 0, "Get bsc balance success", data)
 	}
+}
+
+func GetBscFee(c *gin.Context) {
+	// 送出交易查詢
+	data := make(map[string]string)
+	data["fee"] = "50"
+	SuccessResponse(c, 0, "Get bsc fee success", data)
 }

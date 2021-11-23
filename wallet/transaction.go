@@ -7,6 +7,7 @@ import (
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/gin-gonic/gin"
 	"log"
 	"math/big"
 	"time"
@@ -25,12 +26,12 @@ func GetBscBalance() (*big.Int, error) {
 	return mywallet.getAresBalance()
 }
 
-func SendBscTransaction(txHash common.Hash) (string, error) {
+func SendBscTransaction(txHash common.Hash, c *gin.Context) (string, error) {
 	mywallet.lock.Lock()
 	defer mywallet.lock.Unlock()
 
 	tx, pending, err := mywallet.client.TransactionByHash(txHash)
-	mywallet.l.Info("RegisterDapp", "type", "request", "txHash", txHash.String())
+	mywallet.l.Info("SendBscTransaction", "para", c.Accepted, "txHash", txHash.String(), "context", c.ClientIP())
 
 	if _, ok := mywallet.swapAccount[txHash.String()]; ok {
 		return "", errors.New("cross bsc already exists")
