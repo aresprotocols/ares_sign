@@ -350,3 +350,12 @@ func TestUnpack(t *testing.T) {
 
 	fmt.Println("printBalance erc20", wallet.ToEth(transfer.Value), " ", transfer.From)
 }
+
+func TestAdd(t *testing.T) {
+	baseUnit := new(big.Int).Exp(big.NewInt(10), big.NewInt(18), nil)
+	value1 := new(big.Int).Mul(big.NewInt(int64(66)), baseUnit)
+
+	value := new(big.Int).Add(wallet.EthToWei(200), value1)
+	fmt.Println(" ", value.String())
+
+}
