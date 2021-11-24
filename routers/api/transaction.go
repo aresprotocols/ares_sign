@@ -51,6 +51,6 @@ func GetBscBalance(c *gin.Context) {
 func GetBscFee(c *gin.Context) {
 	// 送出交易查詢
 	data := make(map[string]string)
-	data["fee"] = "50"
+	data["fee"] = "10"
 	SuccessResponse(c, 0, "Get bsc fee success", data)
 }
