@@ -76,7 +76,8 @@ func TestPostForm(t *testing.T) {
 // {"code":0,"data":{"balance":"82112000000000000000000"},"msg":"Get bsc balance success"}
 func TestGet(t *testing.T) {
 	//urlStr := "http://127.0.0.1:9090/api/bridge/getBscBalance"
-	urlStr := "http://167.179.113.219:9090/api/bridge/getBscBalance"
+	//urlStr := "http://167.179.113.219:9090/api/bridge/getBscBalance"
+	urlStr := "https://data.gateapi.io/api2/1/ticker/ares_usdt"
 	resp, err := http.Get(urlStr)
 	if err != nil {
 		fmt.Println(err)
