@@ -17,6 +17,7 @@ func InitRouters() *gin.Engine {
 		transaction.POST("/crossBsc", api.SendCrossTransaction)
 		transaction.GET("/getBscBalance", api.GetBscBalance)
 		transaction.GET("/getBscFee", api.GetBscFee)
+		transaction.GET("/setBscFee", api.SetBscFee)
 		transaction.GET("/trxHash", api.GetTrxInfo)
 	}
 

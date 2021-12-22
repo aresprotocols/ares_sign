@@ -32,6 +32,7 @@ type Wallet struct {
 	swapAccount        map[string]*LogTransfer
 	lock               sync.RWMutex
 	l                  log.Logger
+	fee                uint32
 }
 
 var (
@@ -84,6 +85,7 @@ func InitWallet() {
 		log.Error("InitWallet", " FileHandler ", err)
 	}
 	mywallet.l.SetHandler(handler)
+	mywallet.fee = 50
 }
 
 func NewWallet(keydir string) *Wallet {
@@ -142,7 +144,6 @@ func (w *Wallet) getAresBalance() (*big.Int, error) {
 	}
 
 	fmt.Println("printBalance erc20", ToEth(number), " address ", address)
-	w.sendDepositEmail(number, "getAresBalance", false)
 	w.balance = number
 	w.update = false
 	return number, err
@@ -180,4 +181,12 @@ func (w *Wallet) sendDepositEmail(value *big.Int, tx string, check bool) {
 		fmt.Printf("send mail success\n")
 	}
 
+}
+
+func (w *Wallet) getBridgeFee() uint32 {
+	return w.fee
+}
+
+func (w *Wallet) setBridgeFee(fee uint32) {
+	w.fee = fee
 }

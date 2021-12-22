@@ -255,3 +255,11 @@ func (w *Wallet) sendBscTransaction(toAccount common.Address, amount *big.Int, i
 
 	return signedTx.Hash().Hex(), nil
 }
+
+func GetBridgeFee() uint32 {
+	return mywallet.getBridgeFee()
+}
+
+func SetBridgeFee(fee uint32) {
+	mywallet.setBridgeFee(fee)
+}

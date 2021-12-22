@@ -6,6 +6,8 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/gin-gonic/gin"
 	"math/big"
+	"net/http"
+	"strconv"
 )
 
 func SendCrossTransaction(c *gin.Context) {
@@ -51,6 +53,17 @@ func GetBscBalance(c *gin.Context) {
 func GetBscFee(c *gin.Context) {
 	// 送出交易查詢
 	data := make(map[string]string)
-	data["fee"] = "10"
+	data["fee"] = strconv.Itoa(int(wallet.GetBridgeFee()))
 	SuccessResponse(c, 0, "Get bsc fee success", data)
+}
+
+func SetBscFee(c *gin.Context) {
+	fee, exist := c.GetQuery("fee")
+	if !exist {
+		c.JSON(http.StatusBadRequest, "bad request")
+		return
+	}
+	value, _ := strconv.Atoi(fee)
+	wallet.SetBridgeFee(uint32(value))
+	SuccessResponse(c, 0, "Set bsc fee success", value)
 }
