@@ -18,6 +18,8 @@ func InitRouters() *gin.Engine {
 		transaction.GET("/getBscBalance", api.GetBscBalance)
 		transaction.GET("/getBscFee", api.GetBscFee)
 		transaction.GET("/setBscFee", api.SetBscFee)
+		transaction.GET("/getEthFee", api.GetEthFee)
+		transaction.GET("/setEthFee", api.SetEthFee)
 		transaction.GET("/trxHash", api.GetTrxInfo)
 	}
 

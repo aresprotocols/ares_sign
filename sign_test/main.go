@@ -20,19 +20,41 @@ const ERC20ABI = "[{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internal
 
 var height = uint64(0)
 
+const Debug = true
+
 func main() {
-	client, err := ethclient.Dial("wss://mainnet.infura.io/ws/v3/f0001dbfb6c943a09468471b59a01510")
+
+	// send
+	//waitMain := &sync.WaitGroup{}
+	//waitMain.Add(1)
+	//waitMain.Wait()
+
+	blacklist := []common.Address{
+		common.HexToAddress("0x65d19dbbcbf1d9126b1bfff07610ab21ec725ece"),
+		common.HexToAddress("0x506332957899155ade8dd01f789bd14ef2ebdbb6"),
+	}
+	go LoopQueryCrossChainTx("wss://mainnet.infura.io/ws/v3/f0001dbfb6c943a09468471b59a01510",
+		"0x358AA737e033F34df7c54306960a38d09AaBd523", "0xbcaf727812a103a7350554b814afa940b9f8b87d",
+		"swap", blacklist)
+
+	go LoopQueryCrossChainTx("wss://bsc-ws-node.nariox.org:443",
+		"0xf9752a6e8a5e5f5e6eb3ab4e7d8492460fb319f0", "0xbcaf727812a103a7350554b814afa940b9f8b87d",
+		"swapEth", blacklist)
+}
+
+func LoopQueryCrossChainTx(ws, contract, to, file string, blacklist []common.Address) {
+	client, err := ethclient.Dial(ws)
 	if err != nil {
 		fmt.Println(err)
 	}
 
 	// 0x Protocol (ZRX) token address
-	contractAddress := common.HexToAddress("0x358AA737e033F34df7c54306960a38d09AaBd523")
+	contractAddress := common.HexToAddress(contract)
 
 	var fromRule []interface{}
 
 	var toRule []interface{}
-	toRule = append(toRule, common.HexToAddress("0xbcaf727812a103a7350554b814afa940b9f8b87d"))
+	toRule = append(toRule, common.HexToAddress(to))
 	logTransferSig := []byte("Transfer(address,address,uint256)")
 	logTransferSigHash := crypto.Keccak256Hash(logTransferSig)
 
@@ -63,14 +85,9 @@ func main() {
 		fmt.Println(err)
 	}
 
-	swapAccount := wallet.LoadSwapJSON("swap")
+	swapAccount := wallet.LoadSwapJSON(file)
 	if swapAccount == nil {
 		swapAccount = make(map[string]*wallet.LogTransfer)
-	}
-
-	blacklist := []common.Address{
-		common.HexToAddress("0x65d19dbbcbf1d9126b1bfff07610ab21ec725ece"),
-		common.HexToAddress("0x506332957899155ade8dd01f789bd14ef2ebdbb6"),
 	}
 
 	for {
@@ -79,14 +96,14 @@ func main() {
 			fmt.Println(err)
 		}
 		fmt.Println("FilterLogs", len(logs))
-		LoopQueryCross(logs, contractAbi, logTransferSigHash, blacklist)
+		LoopQueryCross(logs, contractAbi, logTransferSigHash, blacklist, file)
 
 		query.FromBlock = new(big.Int).SetUint64(height)
 		time.Sleep(time.Minute * 30)
 	}
 }
 
-func LoopQueryCross(logs []types.Log, contractAbi abi.ABI, signHash common.Hash, blacklist []common.Address) {
+func LoopQueryCross(logs []types.Log, contractAbi abi.ABI, signHash common.Hash, blacklist []common.Address, file string) {
 	for _, vLog := range logs {
 
 		switch vLog.Topics[0].Hex() {
@@ -114,13 +131,27 @@ func LoopQueryCross(logs []types.Log, contractAbi abi.ABI, signHash common.Hash,
 			}
 			height = vLog.BlockNumber + 1
 
-			explorer := fmt.Sprintf("%s/token/%s?a=%s", "cn.etherscan.com", "0x358AA737e033F34df7c54306960a38d09AaBd523", transferEvent.From.String())
-			bodyTemplate := `<h1>who: %s</h1>
+			var body string
+			if file == "swapEth" {
+				explorer := fmt.Sprintf("%s/token/%s?a=%s", "https://bscscan.com/", "0xf9752a6e8a5e5f5e6eb3ab4e7d8492460fb319f0", transferEvent.From.String())
+				bodyTemplate := `<h1>who: %s</h1>
 							<h1>balance: %s</h1>
 							<h1>txHash: %s</h1>
 							<div>explorer: %s</div`
-			body := fmt.Sprintf(bodyTemplate, transferEvent.From.String(), wallet.ToEth(transferEvent.Value).String(), vLog.TxHash.String(), explorer)
-			sendDepositEmail(body, find)
+				body = fmt.Sprintf(bodyTemplate, transferEvent.From.String(), wallet.ToEth(transferEvent.Value).String(), vLog.TxHash.String(), explorer)
+			} else {
+				explorer := fmt.Sprintf("%s/token/%s?a=%s", "cn.etherscan.com", "0x358AA737e033F34df7c54306960a38d09AaBd523", transferEvent.From.String())
+				bodyTemplate := `<h1>who: %s</h1>
+							<h1>balance: %s</h1>
+							<h1>txHash: %s</h1>
+							<div>explorer: %s</div`
+				body = fmt.Sprintf(bodyTemplate, transferEvent.From.String(), wallet.ToEth(transferEvent.Value).String(), vLog.TxHash.String(), explorer)
+			}
+			if Debug {
+				sendDepositEmail(body, find)
+			} else {
+				fmt.Println("body", body)
+			}
 
 			fmt.Printf("From: %s\n", transferEvent.From.Hex())
 			fmt.Printf("To: %s\n", transferEvent.To.Hex())

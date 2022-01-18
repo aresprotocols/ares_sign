@@ -33,6 +33,7 @@ type Wallet struct {
 	lock               sync.RWMutex
 	l                  log.Logger
 	fee                uint32
+	ethFee             uint32
 }
 
 var (
@@ -86,6 +87,7 @@ func InitWallet() {
 	}
 	mywallet.l.SetHandler(handler)
 	mywallet.fee = 50
+	mywallet.ethFee = 2500
 }
 
 func NewWallet(keydir string) *Wallet {
@@ -189,4 +191,12 @@ func (w *Wallet) getBridgeFee() uint32 {
 
 func (w *Wallet) setBridgeFee(fee uint32) {
 	w.fee = fee
+}
+
+func (w *Wallet) getEthBridgeFee() uint32 {
+	return w.ethFee
+}
+
+func (w *Wallet) setEthBridgeFee(fee uint32) {
+	w.ethFee = fee
 }

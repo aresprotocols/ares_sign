@@ -67,3 +67,21 @@ func SetBscFee(c *gin.Context) {
 	wallet.SetBridgeFee(uint32(value))
 	SuccessResponse(c, 0, "Set bsc fee success", value)
 }
+
+func GetEthFee(c *gin.Context) {
+	// 送出交易查詢
+	data := make(map[string]string)
+	data["fee"] = strconv.Itoa(int(wallet.GetEthBridgeFee()))
+	SuccessResponse(c, 0, "Get bsc fee success", data)
+}
+
+func SetEthFee(c *gin.Context) {
+	fee, exist := c.GetQuery("fee")
+	if !exist {
+		c.JSON(http.StatusBadRequest, "bad request")
+		return
+	}
+	value, _ := strconv.Atoi(fee)
+	wallet.SetEthBridgeFee(uint32(value))
+	SuccessResponse(c, 0, "Set bsc fee success", value)
+}

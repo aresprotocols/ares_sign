@@ -360,3 +360,9 @@ func TestAdd(t *testing.T) {
 	fmt.Println(" ", value.String())
 
 }
+
+func TestBsc(t *testing.T) {
+	LoopQueryCrossChainTx("wss://bsc-ws-node.nariox.org:443",
+		"0xf9752a6e8a5e5f5e6eb3ab4e7d8492460fb319f0", "0x8d27ef69fc76676073bfc7d64b328dcd727d9e5a",
+		"swapEth", nil)
+}
