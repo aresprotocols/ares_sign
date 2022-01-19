@@ -12,6 +12,8 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 	"gopkg.in/gomail.v2"
 	"math/big"
+	"os"
+	"os/signal"
 	"strings"
 	"time"
 )
@@ -25,9 +27,6 @@ const Debug = true
 func main() {
 
 	// send
-	//waitMain := &sync.WaitGroup{}
-	//waitMain.Add(1)
-	//waitMain.Wait()
 
 	blacklist := []common.Address{
 		common.HexToAddress("0x65d19dbbcbf1d9126b1bfff07610ab21ec725ece"),
@@ -40,6 +39,13 @@ func main() {
 	go LoopQueryCrossChainTx("wss://bsc-ws-node.nariox.org:443",
 		"0xf9752a6e8a5e5f5e6eb3ab4e7d8492460fb319f0", "0xbcaf727812a103a7350554b814afa940b9f8b87d",
 		"swapEth", blacklist)
+
+	abortChan := make(chan os.Signal, 1)
+	signal.Notify(abortChan, os.Interrupt)
+
+	sig := <-abortChan
+
+	fmt.Printf("Exiting... signal %v\n", sig)
 }
 
 func LoopQueryCrossChainTx(ws, contract, to, file string, blacklist []common.Address) {
