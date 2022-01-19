@@ -99,7 +99,7 @@ func LoopQueryCrossChainTx(ws, contract, to, file string, blacklist []common.Add
 		LoopQueryCross(logs, contractAbi, logTransferSigHash, blacklist, file)
 
 		query.FromBlock = new(big.Int).SetUint64(height)
-		time.Sleep(time.Minute * 30)
+		time.Sleep(time.Minute * 15)
 	}
 }
 
