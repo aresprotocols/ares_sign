@@ -44,7 +44,7 @@ func GetBscBalance(c *gin.Context) {
 		data["error"] = err.Error()
 		SuccessResponse(c, 0, "Get bsc balance error", data)
 	} else {
-		value := new(big.Int).Add(wallet.EthToWei(4000000), response)
+		value := new(big.Int).Add(wallet.EthToWei(10000000), response)
 		data["balance"] = value.String()
 		SuccessResponse(c, 0, "Get bsc balance success", data)
 	}
