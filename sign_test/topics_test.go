@@ -362,7 +362,7 @@ func TestAdd(t *testing.T) {
 }
 
 func TestBsc(t *testing.T) {
-	LoopQueryCrossChainTx("wss://bsc-ws-node.nariox.org:443",
-		"0xf9752a6e8a5e5f5e6eb3ab4e7d8492460fb319f0", "0x8d27ef69fc76676073bfc7d64b328dcd727d9e5a",
-		"swapEth", nil)
+	LoopQueryCrossChainTx("wss://bsc-ws-node.nariox.org",
+		"0xf9752a6e8a5e5f5e6eb3ab4e7d8492460fb319f0", "0xbcaf727812a103a7350554b814afa940b9f8b87d",
+		"swapEth", nil, 5000)
 }

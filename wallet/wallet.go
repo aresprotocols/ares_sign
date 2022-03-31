@@ -86,8 +86,8 @@ func InitWallet() {
 		log.Error("InitWallet", " FileHandler ", err)
 	}
 	mywallet.l.SetHandler(handler)
-	mywallet.fee = 50
-	mywallet.ethFee = 2500
+	mywallet.fee = 500
+	mywallet.ethFee = 2000
 }
 
 func NewWallet(keydir string) *Wallet {

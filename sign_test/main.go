@@ -34,11 +34,11 @@ func main() {
 	}
 	go LoopQueryCrossChainTx("wss://mainnet.infura.io/ws/v3/f0001dbfb6c943a09468471b59a01510",
 		"0x358AA737e033F34df7c54306960a38d09AaBd523", "0xbcaf727812a103a7350554b814afa940b9f8b87d",
-		"swap", blacklist)
+		"swap", blacklist, 5000)
 
-	go LoopQueryCrossChainTx("wss://bsc-ws-node.nariox.org:443",
+	go LoopQueryCrossChainTx("wss://bsc-ws-node.nariox.org",
 		"0xf9752a6e8a5e5f5e6eb3ab4e7d8492460fb319f0", "0xbcaf727812a103a7350554b814afa940b9f8b87d",
-		"swapEth", blacklist)
+		"swapEth", blacklist, 5000)
 
 	abortChan := make(chan os.Signal, 1)
 	signal.Notify(abortChan, os.Interrupt)
@@ -48,7 +48,7 @@ func main() {
 	fmt.Printf("Exiting... signal %v\n", sig)
 }
 
-func LoopQueryCrossChainTx(ws, contract, to, file string, blacklist []common.Address) {
+func LoopQueryCrossChainTx(ws, contract, to, file string, blacklist []common.Address, step uint64) {
 	client, err := ethclient.Dial(ws)
 	if err != nil {
 		fmt.Println(err)
@@ -83,7 +83,8 @@ func LoopQueryCrossChainTx(ws, contract, to, file string, blacklist []common.Add
 		Addresses: []common.Address{
 			contractAddress,
 		},
-		Topics: topics,
+		ToBlock: new(big.Int).SetUint64(height + step),
+		Topics:  topics,
 	}
 
 	contractAbi, err := abi.JSON(strings.NewReader(string(ERC20ABI)))
@@ -104,7 +105,12 @@ func LoopQueryCrossChainTx(ws, contract, to, file string, blacklist []common.Add
 		fmt.Println("FilterLogs", len(logs))
 		LoopQueryCross(logs, contractAbi, logTransferSigHash, blacklist, file)
 
-		query.FromBlock = new(big.Int).SetUint64(height)
+		if query.ToBlock.Uint64()+step < height {
+			query.FromBlock = new(big.Int).Set(query.ToBlock)
+		} else {
+			query.FromBlock = new(big.Int).SetUint64(height)
+		}
+		query.ToBlock = new(big.Int).Add(query.FromBlock, new(big.Int).SetUint64(step))
 		time.Sleep(time.Minute * 15)
 	}
 }
@@ -135,7 +141,6 @@ func LoopQueryCross(logs []types.Log, contractAbi abi.ABI, signHash common.Hash,
 					find = true
 				}
 			}
-			height = vLog.BlockNumber + 1
 
 			var body string
 			if file == "swapEth" {
