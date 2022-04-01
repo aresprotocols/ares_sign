@@ -98,11 +98,12 @@ func LoopQueryCrossChainTx(ws, contract, to, file string, blacklist []common.Add
 	}
 
 	for {
+		height, err = client.BlockNumber(context.Background())
 		logs, err := client.FilterLogs(context.Background(), query)
 		if err != nil {
 			fmt.Println(err)
 		}
-		fmt.Println("FilterLogs", len(logs))
+		fmt.Println("FilterLogs", len(logs), " height ", height, " from ", query.FromBlock, " ", query.ToBlock)
 		LoopQueryCross(logs, contractAbi, logTransferSigHash, blacklist, file)
 
 		if query.ToBlock.Uint64()+step < height {
