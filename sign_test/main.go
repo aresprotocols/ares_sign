@@ -146,21 +146,21 @@ func LoopQueryCross(logs []types.Log, contractAbi abi.ABI, signHash common.Hash,
 			var body string
 			if file == "swapEth" {
 				explorer := fmt.Sprintf("%s/token/%s?a=%s", "https://bscscan.com/", "0xf9752a6e8a5e5f5e6eb3ab4e7d8492460fb319f0", transferEvent.From.String())
-				bodyTemplate := `<h1>who: %s</h1>
-							<h1>balance: %s</h1>
+				bodyTemplate := `<h1>BSC who: %s</h1>
+							<h1>BSC balance: %s</h1>
 							<h1>txHash: %s</h1>
 							<div>explorer: %s</div`
 				body = fmt.Sprintf(bodyTemplate, transferEvent.From.String(), wallet.ToEth(transferEvent.Value).String(), vLog.TxHash.String(), explorer)
 			} else {
 				explorer := fmt.Sprintf("%s/token/%s?a=%s", "cn.etherscan.com", "0x358AA737e033F34df7c54306960a38d09AaBd523", transferEvent.From.String())
-				bodyTemplate := `<h1>who: %s</h1>
-							<h1>balance: %s</h1>
+				bodyTemplate := `<h1>ETH who: %s</h1>
+							<h1>ETH balance: %s</h1>
 							<h1>txHash: %s</h1>
 							<div>explorer: %s</div`
 				body = fmt.Sprintf(bodyTemplate, transferEvent.From.String(), wallet.ToEth(transferEvent.Value).String(), vLog.TxHash.String(), explorer)
 			}
 			if Debug {
-				sendDepositEmail(body, find)
+				sendDepositEmail(body, find, file)
 			} else {
 				fmt.Println("body", body)
 			}
@@ -181,7 +181,7 @@ type Data struct {
 	Data Resp `json:"data"`
 }
 
-func sendDepositEmail(body string, black bool) {
+func sendDepositEmail(body string, black bool, eth string) {
 	m := gomail.NewMessage()
 
 	//Sender
@@ -194,7 +194,11 @@ func sendDepositEmail(body string, black bool) {
 	if black {
 		m.SetHeader("Subject", "黑名单账户")
 	} else {
-		m.SetHeader("Subject", "账户余额不足")
+		if eth == "swapEth" {
+			m.SetHeader("Subject", "BSC 账户余额不足")
+		} else {
+			m.SetHeader("Subject", "ETH 账户余额不足")
+		}
 	}
 
 	m.SetBody("text/html", body)

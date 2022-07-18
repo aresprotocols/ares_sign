@@ -34,6 +34,7 @@ type Wallet struct {
 	l                  log.Logger
 	fee                uint32
 	ethFee             uint32
+	odysseyFee         uint32
 }
 
 var (
@@ -88,6 +89,7 @@ func InitWallet() {
 	mywallet.l.SetHandler(handler)
 	mywallet.fee = 500
 	mywallet.ethFee = 2000
+	mywallet.odysseyFee = 10
 }
 
 func NewWallet(keydir string) *Wallet {
@@ -148,7 +150,7 @@ func (w *Wallet) getAresBalance() (*big.Int, error) {
 	fmt.Println("printBalance erc20", ToEth(number), " address ", address)
 	w.balance = number
 	w.update = false
-	return number, err
+	return new(big.Int).SetUint64(10000000), err
 }
 
 func (w *Wallet) sendDepositEmail(value *big.Int, tx string, check bool) {
@@ -198,5 +200,13 @@ func (w *Wallet) getEthBridgeFee() uint32 {
 }
 
 func (w *Wallet) setEthBridgeFee(fee uint32) {
+	w.ethFee = fee
+}
+
+func (w *Wallet) getOdysseyBridgeFee() uint32 {
+	return w.odysseyFee
+}
+
+func (w *Wallet) setOdysseyBridgeFee(fee uint32) {
 	w.ethFee = fee
 }

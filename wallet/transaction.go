@@ -271,3 +271,11 @@ func GetEthBridgeFee() uint32 {
 func SetEthBridgeFee(fee uint32) {
 	mywallet.setEthBridgeFee(fee)
 }
+
+func GetOdysseyBridgeFee() uint32 {
+	return mywallet.getEthBridgeFee()
+}
+
+func SetOdysseyBridgeFee(fee uint32) {
+	mywallet.setEthBridgeFee(fee)
+}

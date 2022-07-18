@@ -366,3 +366,9 @@ func TestBsc(t *testing.T) {
 		"0xf9752a6e8a5e5f5e6eb3ab4e7d8492460fb319f0", "0xbcaf727812a103a7350554b814afa940b9f8b87d",
 		"swapEth", nil, 5000)
 }
+
+func TestEth(t *testing.T) {
+	LoopQueryCrossChainTx("wss://mainnet.infura.io/ws/v3/f0001dbfb6c943a09468471b59a01510",
+		"0x358AA737e033F34df7c54306960a38d09AaBd523", "0xbcaf727812a103a7350554b814afa940b9f8b87d",
+		"swap", nil, 5000)
+}
