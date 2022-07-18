@@ -90,7 +90,7 @@ func GetOdysseyFee(c *gin.Context) {
 	// 送出交易查詢
 	data := make(map[string]string)
 	data["fee"] = strconv.Itoa(int(wallet.GetOdysseyBridgeFee()))
-	SuccessResponse(c, 0, "Get bsc fee success", data)
+	SuccessResponse(c, 0, "Get Odyssey fee success", data)
 }
 
 func SetOdysseyFee(c *gin.Context) {
@@ -101,5 +101,5 @@ func SetOdysseyFee(c *gin.Context) {
 	}
 	value, _ := strconv.Atoi(fee)
 	wallet.SetOdysseyBridgeFee(uint32(value))
-	SuccessResponse(c, 0, "Set bsc fee success", value)
+	SuccessResponse(c, 0, "Set Odyssey fee success", value)
 }

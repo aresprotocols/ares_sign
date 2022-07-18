@@ -208,5 +208,5 @@ func (w *Wallet) getOdysseyBridgeFee() uint32 {
 }
 
 func (w *Wallet) setOdysseyBridgeFee(fee uint32) {
-	w.ethFee = fee
+	w.odysseyFee = fee
 }
