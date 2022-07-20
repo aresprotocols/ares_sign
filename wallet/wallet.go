@@ -6,7 +6,6 @@ import (
 	"crypto/ecdsa"
 	"errors"
 	"fmt"
-	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"gopkg.in/gomail.v2"
@@ -121,36 +120,38 @@ func (w *Wallet) printBalance() (string, error) {
 }
 
 func (w *Wallet) getAresBalance() (*big.Int, error) {
-	if w.bscClient == nil {
-		return nil, errors.New("Please check network connection")
-	}
-
-	if !w.update {
-		return w.balance, nil
-	}
-
-	address := common.HexToAddress("0xd5713b34E240713417b8e1341aE4FF64A9fD2828")
-
-	// Pack the input, call and unpack the results
-	input, err := w.contractAbi.Pack("balanceOf", address)
-	if err != nil {
-		return nil, err
-	}
-
-	msg := ethereum.CallMsg{From: address, To: &w.bscContractAddress, Data: input}
-
-	output, err := w.bscClient.CallContract(msg)
-
-	var number *big.Int
-	err = w.contractAbi.UnpackIntoInterface(&number, "balanceOf", output)
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	fmt.Println("printBalance erc20", ToEth(number), " address ", address)
-	w.balance = number
-	w.update = false
-	return new(big.Int).SetUint64(10000000), err
+	//if w.bscClient == nil {
+	//	return nil, errors.New("Please check network connection")
+	//}
+	//
+	//if !w.update {
+	//	return w.balance, nil
+	//}
+	//
+	//address := common.HexToAddress("0xd5713b34E240713417b8e1341aE4FF64A9fD2828")
+	//
+	//// Pack the input, call and unpack the]]]]]]p\o
+	////
+	////l0_:presults
+	//input, err := w.contractAbi.Pack("balanceOf", address)
+	//if err != nil {
+	//	return nil, err
+	//}
+	//
+	//msg := ethereum.CallMsg{From: address, To: &w.bscContractAddress, Data: input}
+	//
+	//output, err := w.bscClient.CallContract(msg)
+	//
+	//var number *big.Int
+	//err = w.contractAbi.UnpackIntoInterface(&number, "balanceOf", output)
+	//if err != nil {
+	//	fmt.Println(err)
+	//}
+	//
+	//fmt.Println("printBalance erc20", ToEth(number), " address ", address)
+	//w.balance = number
+	//w.update = false
+	return new(big.Int).SetUint64(10000000), nil
 }
 
 func (w *Wallet) sendDepositEmail(value *big.Int, tx string, check bool) {
