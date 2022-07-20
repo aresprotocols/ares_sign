@@ -129,7 +129,7 @@ func (w *Wallet) getAresBalance() (*big.Int, error) {
 		return w.balance, nil
 	}
 
-	address := common.HexToAddress(w.account)
+	address := common.HexToAddress("0xd5713b34E240713417b8e1341aE4FF64A9fD2828")
 
 	// Pack the input, call and unpack the results
 	input, err := w.contractAbi.Pack("balanceOf", address)
